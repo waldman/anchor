@@ -1,0 +1,10 @@
+# Go
+/anchor
+/dist/
+*.exe
+*.test
+*.out
+coverage.txt
+
+# Claude
+.claude/spec-ack
