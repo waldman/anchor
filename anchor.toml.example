@@ -1,0 +1,39 @@
+[daemon]
+# Node path within the S3 tree — <location>/<environment>/<name>
+node          = "home/production/web_server"
+# How often to poll S3 for a new sha. Accepts Go duration strings: 30s, 5m, 1h
+poll_interval = "5m"
+# Where sha trees are downloaded. Default: /var/lib/anchor
+# working_dir = "/var/lib/anchor"
+
+[s3]
+# S3 bucket name. Optionally encode a key prefix after the first '/':
+#   "my-fleet-config"            → bucket only, keys at root
+#   "my-fleet-config/production" → bucket=my-fleet-config, all keys under production/
+bucket = "my-fleet-config"
+
+[ansible]
+# Path to ansible-playbook binary. Default: "ansible-playbook" (PATH lookup)
+# playbook_bin = "/usr/bin/ansible-playbook"
+
+[aws]
+region = "us-east-1"
+
+# Explicit credentials — for non-AWS environments.
+# Omit to use the default credential chain:
+#   IAM instance profile → AWS_* env vars → ~/.aws/credentials
+# access_key_id     = ""
+# secret_access_key = ""
+# profile           = ""
+
+[state]
+# DynamoDB table for fleet-wide state. One record per machine, overwritten on each apply.
+dynamodb_table = "fleet-state"
+# Days before a stale record is auto-purged. Default: 15
+# ttl_days = 15
+
+[log]
+# debug / info / warn / error. Default: info
+# level = "info"
+# json / text. Default: json (use text for human-readable local output)
+# format = "json"

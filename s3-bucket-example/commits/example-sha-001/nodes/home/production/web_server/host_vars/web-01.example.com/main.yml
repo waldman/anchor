@@ -1,0 +1,4 @@
+---
+# Host-specific variable overrides.
+# Variables only — no tasks, no role includes.
+nginx_port: 8080

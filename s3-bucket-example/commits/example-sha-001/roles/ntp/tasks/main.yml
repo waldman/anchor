@@ -1,0 +1,12 @@
+---
+- name: Install ntp
+  package:
+    name: ntp
+    state: present
+
+- name: Configure ntp servers
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+  notify: restart ntp
+  when: ntp_servers is defined

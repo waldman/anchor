@@ -1,0 +1,5 @@
+---
+nginx_port: 80
+ntp_servers:
+  - pool.ntp.org
+  - time.cloudflare.com

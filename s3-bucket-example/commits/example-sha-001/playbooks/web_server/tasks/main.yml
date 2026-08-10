@@ -1,0 +1,8 @@
+---
+- name: Apply ntp role
+  include_role:
+    name: ntp
+
+- name: Apply nginx role
+  include_role:
+    name: nginx
