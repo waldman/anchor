@@ -1,0 +1,20 @@
+[Unit]
+Description=Anchor configuration management daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/anchor -config /etc/anchor/anchor.toml --daemon
+Restart=on-failure
+RestartSec=30s
+StandardOutput=journal
+StandardError=journal
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/anchor
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
