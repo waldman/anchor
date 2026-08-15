@@ -36,6 +36,7 @@ SETUP_SYSTEMD=false
 
 CONFIG_DIR="/etc/anchor"
 CONFIG_FILE="$CONFIG_DIR/anchor.toml"
+STATE_DIR="/var/lib/anchor"
 SERVICE_FILE="/etc/systemd/system/anchor.service"
 REPO="waldman/anchor"
 
@@ -130,8 +131,9 @@ install_binary() {
 # ── Config file ───────────────────────────────────────────────────────────────
 
 write_config() {
-  mkdir -p "$CONFIG_DIR"
+  mkdir -p "$CONFIG_DIR" "$STATE_DIR"
   chmod 750 "$CONFIG_DIR"
+  chmod 755 "$STATE_DIR"
 
   cat > "$CONFIG_FILE" <<EOF
 [daemon]
