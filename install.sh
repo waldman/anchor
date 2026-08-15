@@ -39,6 +39,9 @@ CONFIG_FILE="$CONFIG_DIR/anchor.toml"
 SERVICE_FILE="/etc/systemd/system/anchor.service"
 REPO="waldman/anchor"
 
+TMP=""
+trap '[[ -n "$TMP" ]] && rm -rf "$TMP"' EXIT
+
 RED=$(tput setaf 1 2>/dev/null || true)
 GRN=$(tput setaf 2 2>/dev/null || true)
 YLW=$(tput setaf 3 2>/dev/null || true)
@@ -106,9 +109,7 @@ detect_platform() {
 
 install_binary() {
   local platform="$1"
-  local tmp
-  tmp=$(mktemp -d)
-  trap 'rm -rf "$tmp"' EXIT
+  TMP=$(mktemp -d)
 
   if [[ -z "$VERSION" ]]; then
     info "Fetching latest release..."
@@ -119,10 +120,10 @@ install_binary() {
 
   local url="https://github.com/${REPO}/releases/download/v${VERSION}/anchor_${VERSION}_${platform}.tar.gz"
   info "Downloading anchor v${VERSION} for ${platform}..."
-  curl -fsSL "$url" -o "$tmp/anchor.tar.gz"
+  curl -fsSL "$url" -o "$TMP/anchor.tar.gz"
 
-  tar -xzf "$tmp/anchor.tar.gz" -C "$tmp"
-  install -m 0755 "$tmp/anchor" "$INSTALL_DIR/anchor"
+  tar -xzf "$TMP/anchor.tar.gz" -C "$TMP"
+  install -m 0755 "$TMP/anchor" "$INSTALL_DIR/anchor"
   info "Installed anchor to $INSTALL_DIR/anchor"
 }
 
