@@ -8,6 +8,7 @@ s3://<bucket>/
   commits/
     <sha>/
       ansible.cfg                      # roles_path = roles:playbooks
+      inventory                        # written at fetch time by the daemon (see 05_runner.md)
       roles/
         <role-name>/
           tasks/
@@ -25,13 +26,19 @@ s3://<bucket>/
       nodes/
         <location>/
           <environment>/
-            <name>/
-              playbook.yml             # imports playbooks/
-              canary.txt               # optional — controls who gets this sha
-              host_vars/
-                <hostname>/
-                  main.yml             # variable overrides — no tasks
+            <name>.yml                 # node = single file: imports + vars
+      canary/
+        <location>/
+          <environment>/
+            <name>.txt                 # optional — controls who gets this sha
+      host_vars/
+        <hostname>/
+          main.yml                     # per-hostname variable overrides
 ```
+
+Three concerns, three top-level trees. `nodes/` is pure identity (who the machine
+is). `canary/` is deployment metadata (release engineering). `host_vars/` is
+per-machine data (Ansible-native discovery via inventory).
 
 ## `ansible.cfg`
 
@@ -45,7 +52,7 @@ host_key_checking = False
 
 `roles_path = roles:playbooks` allows playbooks to reference both Ansible roles
 and Anchor playbooks by name interchangeably. Anchor playbooks reference roles;
-node playbooks reference Anchor playbooks. Ansible resolves both.
+node files reference Anchor playbooks. Ansible resolves both.
 
 ## `current` Pointer
 
@@ -84,12 +91,18 @@ The daemon config field `node` holds this path. The full S3 key for the node's
 entry point is:
 
 ```
-commits/<sha>/nodes/<node>/playbook.yml
+commits/<sha>/nodes/<node>.yml
 ```
 
-## `canary.txt`
+The `.yml` extension is required. A node is a **single file**: identity + role or
+playbook includes + variables. **No per-node files, templates, or tasks** — those
+belong in roles or playbooks. This is the Puppet-style roles/profiles/modules
+discipline: nodes are identity, not implementation.
 
-Located at `commits/<sha>/nodes/<location>/<environment>/<name>/canary.txt`.
+## `canary/<node>.txt`
+
+Located at `commits/<sha>/canary/<location>/<environment>/<name>.txt` — a top-level
+sibling of `nodes/`, keyed by node path.
 
 Semantics:
 - **Absent (404)** → all hosts apply
@@ -100,15 +113,23 @@ Semantics:
 One hostname per line. Exact match — `web-01` does not match `web-01.example.com`.
 Lines starting with `#` and blank lines are ignored.
 
+Canary lives outside `nodes/` because it is deployment-time metadata about a
+specific SHA rollout, not part of the node's identity.
+
 ## `host_vars/`
 
-Located at `commits/<sha>/nodes/<node>/host_vars/<hostname>/main.yml`.
+Located at `commits/<sha>/host_vars/<hostname>/main.yml` — a top-level sibling of
+`nodes/`, keyed by hostname.
 
 Variables only. No tasks, no handlers, no role includes. These override variables
-set in the node's playbook and the playbooks it imports.
+set in the node's file and the playbooks it imports.
 
-Ansible resolves `host_vars/` automatically when the daemon uses the real hostname
-in the inventory (see `05_runner.md`).
+Hostnames are unique across the fleet (one machine, one node), so `host_vars/` is
+intentionally global rather than per-node.
+
+Ansible resolves `host_vars/` automatically via `inventory_dir`. The daemon writes
+a single-line `inventory` file at the tree root at fetch time; Ansible then looks
+for `host_vars/<hostname>/` next to the inventory. See `05_runner.md`.
 
 ## Self-Contained Trees
 

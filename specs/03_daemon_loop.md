@@ -38,15 +38,17 @@ At most one apply runs at any time.
 
 1. **Read `current`** from S3: `GET <prefix>/current`
 2. **Compare** to `last_sha` (in-memory). If equal → back to Idle.
-3. **Check canary**: `GET <prefix>/commits/<sha>/nodes/<node>/canary.txt`
+3. **Check canary**: `GET <prefix>/commits/<sha>/canary/<node>.txt`
    - Absent → proceed
    - Present → check hostname; skip if not listed
 4. **Download tree**: copy `commits/<sha>/` to `working_dir/staging/<sha>/`
-5. **Verify**: staging directory must contain `nodes/<node>/playbook.yml`
-6. **Atomic swap**: rename `staging/<sha>/` to `working_dir/current/`
-7. **Apply**: run `ansible-playbook` (see `05_runner.md`)
-8. **Write state**: update local `state.json` and DynamoDB (see `06_state.md`)
-9. **Update `last_sha`**: set to new sha on success; leave unchanged on failure
+5. **Verify**: staging directory must contain `nodes/<node>.yml`
+6. **Write inventory**: create `<staging>/inventory` with the local hostname
+   (single line). Needed for Ansible's `host_vars/` discovery.
+7. **Atomic swap**: rename `staging/<sha>/` to `working_dir/current/`
+8. **Apply**: run `ansible-playbook` (see `05_runner.md`)
+9. **Write state**: update local `state.json` and DynamoDB (see `06_state.md`)
+10. **Update `last_sha`**: set to new sha on success; leave unchanged on failure
 
 ## Working Directory Layout
 

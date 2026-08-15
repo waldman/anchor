@@ -9,19 +9,24 @@ tree, captures output, and returns success or failure.
 
 ```bash
 ansible-playbook \
-  -i <hostname>, \
+  -i inventory \
   -e ansible_connection=local \
-  nodes/<node>/playbook.yml
+  nodes/<node>.yml
 ```
 
 Working directory: `working_dir/current/` (the root of the active sha tree).
 `ansible.cfg` at the tree root is picked up automatically by Ansible.
 
-**Inventory:** real machine hostname (`os.Hostname()`), not `localhost`. This is
-required for Ansible to resolve `host_vars/<hostname>/` automatically.
+## Inventory File
 
-The trailing comma in `-i <hostname>,` is required — it tells Ansible the argument
-is an inline inventory, not a file path.
+The daemon writes an `inventory` file at the tree root at fetch time — a single
+line containing `os.Hostname()`. This is deliberate: an inventory *file* (rather
+than inline `-i <host>,`) makes Ansible resolve `host_vars/<hostname>/` relative
+to `inventory_dir`, which is the tree root — so top-level `host_vars/` gets picked
+up automatically.
+
+The hostname must be the machine's real hostname (not `localhost`) so it matches
+the `host_vars/<hostname>/` directory in the tree and the canary hostname list.
 
 ## `ansible.cfg` in the Tree
 

@@ -18,11 +18,11 @@ Anchor follows a three-layer taxonomy:
 |---|---|---|
 | **Role** | `roles/` | Reusable Ansible role. One technology (`nginx`, `postgresql`). |
 | **Playbook** | `playbooks/` | Business-layer composition. Assembles roles for a purpose. |
-| **Node** | `nodes/` | Machine identity. Assembles playbooks. One per machine. |
+| **Node** | `nodes/<node>.yml` | Machine identity. One file per machine — includes + variables only, no per-node implementation. |
 
 Operators push a new tree to S3 under `commits/<sha>/`, then write the sha to
 `current`. On the next poll, every daemon that sees the change downloads the
-tree and applies the node's playbook.
+tree and applies the node's file.
 
 ---
 
@@ -140,17 +140,22 @@ s3://<bucket>/
       nodes/
         <location>/
           <environment>/
-            <name>/
-              playbook.yml             # imports playbooks/
-              canary.txt               # optional — controls who gets this sha
-              host_vars/
-                <hostname>/
-                  main.yml             # variable overrides only
+            <name>.yml                 # node = single file: imports + vars
+      canary/
+        <location>/
+          <environment>/
+            <name>.txt                 # optional — controls who gets this sha
+      host_vars/
+        <hostname>/
+          main.yml                     # per-hostname variable overrides
 ```
+
+Three concerns, three trees. `nodes/` is pure identity, `canary/` is release
+metadata, `host_vars/` is per-machine data.
 
 ### Canary deployments
 
-Create `canary.txt` in the node directory before flipping `current`:
+Create `canary/<node>.txt` before flipping `current`:
 
 ```
 # canary.txt — one hostname per line, exact match
@@ -162,9 +167,9 @@ Absent = all machines apply. Empty = no machines apply (emergency block).
 
 ### Host-specific variables
 
-Place variable overrides in `host_vars/<hostname>/main.yml` within the node
-directory. Variables only — no tasks, no role includes. Ansible resolves these
-automatically because Anchor uses the real hostname in the inventory.
+Place variable overrides in `host_vars/<hostname>/main.yml` at the tree root.
+Variables only — no tasks, no role includes. Ansible resolves these automatically
+because Anchor writes an inventory file containing the real hostname at fetch time.
 
 ---
 

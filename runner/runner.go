@@ -23,10 +23,10 @@ func New(playbookBin string) Runner {
 }
 
 func (r *ansibleRunner) Apply(ctx context.Context, treeDir, node, hostname string) (time.Duration, error) {
-	playbook := filepath.Join("nodes", filepath.FromSlash(node), "playbook.yml")
+	playbook := filepath.Join("nodes", filepath.FromSlash(node)+".yml")
 
 	cmd := exec.CommandContext(ctx, r.playbookBin,
-		"-i", hostname+",",
+		"-i", "inventory",
 		"-e", "ansible_connection=local",
 		playbook,
 	)
