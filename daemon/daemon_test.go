@@ -100,7 +100,7 @@ func newTestDaemon(t *testing.T, s3c *mockS3, r *mockRunner, store *mockStore) *
 func s3WithTree(sha, node string, extra map[string][]byte) *mockS3 {
 	objects := map[string][]byte{
 		"current": []byte(sha),
-		fmt.Sprintf("commits/%s/nodes/%s/playbook.yml", sha, node): []byte("---"),
+		fmt.Sprintf("commits/%s/nodes/%s.yml", sha, node): []byte("---"),
 	}
 	for k, v := range extra {
 		objects[k] = v
@@ -197,7 +197,7 @@ func TestRunOnce_CanaryAbsent_AllApply(t *testing.T) {
 func TestRunOnce_CanaryHostnameMatch_Applies(t *testing.T) {
 	hostname, _ := os.Hostname()
 	canaryContent := fmt.Sprintf("# comment\n%s\nother-host.example.com\n", hostname)
-	canaryKey := fmt.Sprintf("commits/%s/nodes/%s/canary.txt", testSHA, testNode)
+	canaryKey := fmt.Sprintf("commits/%s/canary/%s.txt", testSHA, testNode)
 
 	store := &mockStore{}
 	runner := &mockRunner{}
@@ -217,7 +217,7 @@ func TestRunOnce_CanaryHostnameMatch_Applies(t *testing.T) {
 }
 
 func TestRunOnce_CanaryHostnameNotListed_Skips(t *testing.T) {
-	canaryKey := fmt.Sprintf("commits/%s/nodes/%s/canary.txt", testSHA, testNode)
+	canaryKey := fmt.Sprintf("commits/%s/canary/%s.txt", testSHA, testNode)
 
 	store := &mockStore{}
 	runner := &mockRunner{}
@@ -240,7 +240,7 @@ func TestRunOnce_CanaryHostnameNotListed_Skips(t *testing.T) {
 }
 
 func TestRunOnce_CanaryEmpty_AllSkip(t *testing.T) {
-	canaryKey := fmt.Sprintf("commits/%s/nodes/%s/canary.txt", testSHA, testNode)
+	canaryKey := fmt.Sprintf("commits/%s/canary/%s.txt", testSHA, testNode)
 
 	store := &mockStore{}
 	runner := &mockRunner{}
@@ -261,7 +261,7 @@ func TestRunOnce_CanaryEmpty_AllSkip(t *testing.T) {
 
 func TestRunOnce_CanaryCommentsAndBlanks_Ignored(t *testing.T) {
 	hostname, _ := os.Hostname()
-	canaryKey := fmt.Sprintf("commits/%s/nodes/%s/canary.txt", testSHA, testNode)
+	canaryKey := fmt.Sprintf("commits/%s/canary/%s.txt", testSHA, testNode)
 	content := fmt.Sprintf("\n# this is a comment\n\n%s\n\n", hostname)
 
 	store := &mockStore{}
@@ -286,7 +286,7 @@ func TestRunOnce_CanaryPartialMatch_Rejected(t *testing.T) {
 		t.Skip("hostname has no dot — partial match test not applicable")
 	}
 
-	canaryKey := fmt.Sprintf("commits/%s/nodes/%s/canary.txt", testSHA, testNode)
+	canaryKey := fmt.Sprintf("commits/%s/canary/%s.txt", testSHA, testNode)
 	store := &mockStore{}
 	runner := &mockRunner{}
 	s3c := s3WithTree(testSHA, testNode, map[string][]byte{

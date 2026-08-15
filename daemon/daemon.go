@@ -15,7 +15,7 @@ import (
 	"github.com/waldman/anchor/state"
 )
 
-const Version = "0.1.0"
+const Version = "0.2.0"
 
 type Daemon struct {
 	cfg      *config.Config
@@ -140,7 +140,7 @@ func (d *Daemon) pollCurrent(ctx context.Context) (string, error) {
 }
 
 func (d *Daemon) checkCanary(ctx context.Context, sha string) (bool, error) {
-	key := fmt.Sprintf("commits/%s/nodes/%s/canary.txt", sha, d.cfg.Daemon.Node)
+	key := fmt.Sprintf("commits/%s/canary/%s.txt", sha, d.cfg.Daemon.Node)
 	data, err := d.s3.GetObject(ctx, key)
 	if err != nil {
 		return false, err
@@ -172,10 +172,19 @@ func (d *Daemon) fetchTree(ctx context.Context, sha string) (string, error) {
 		return "", fmt.Errorf("download tree: %w", err)
 	}
 
-	playbook := filepath.Join(stagingDir, "nodes", filepath.FromSlash(d.cfg.Daemon.Node), "playbook.yml")
+	playbook := filepath.Join(stagingDir, "nodes", filepath.FromSlash(d.cfg.Daemon.Node)+".yml")
 	if _, err := os.Stat(playbook); err != nil {
 		os.RemoveAll(stagingDir)
-		return "", fmt.Errorf("node playbook not found in tree: nodes/%s/playbook.yml", d.cfg.Daemon.Node)
+		return "", fmt.Errorf("node playbook not found in tree: nodes/%s.yml", d.cfg.Daemon.Node)
+	}
+
+	// Write inventory file for Ansible host_vars discovery.
+	// A file inventory (vs inline "-i host,") lets Ansible resolve
+	// host_vars/<hostname>/ relative to inventory_dir (the tree root).
+	invPath := filepath.Join(stagingDir, "inventory")
+	if err := os.WriteFile(invPath, []byte(d.hostname+"\n"), 0644); err != nil {
+		os.RemoveAll(stagingDir)
+		return "", fmt.Errorf("write inventory: %w", err)
 	}
 
 	currentDir := filepath.Join(d.cfg.Daemon.WorkingDir, "current")

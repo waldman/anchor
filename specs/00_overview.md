@@ -24,7 +24,7 @@ Three layers, each building on the one below:
 |---|---|---|
 | **Role** | `roles/` | Reusable Ansible role. One technology. Generic across customers. |
 | **Playbook** | `playbooks/` | Business-layer composition. Assembles roles for a specific purpose. |
-| **Node** | `nodes/` | Machine identity. Assembles playbooks. Has a `canary.txt`. One per machine. |
+| **Node** | `nodes/<node>.yml` | Machine identity. Single file: assembles playbooks and sets vars. One per machine. |
 
 **One node per machine, always.** If a machine needs to do two things, create a
 node whose playbook imports both.

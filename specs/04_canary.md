@@ -9,11 +9,14 @@ their hostnames in `canary.txt`.
 ## File Location
 
 ```
-commits/<sha>/nodes/<location>/<environment>/<name>/canary.txt
+commits/<sha>/canary/<location>/<environment>/<name>.txt
 ```
 
-The file is node-scoped and sha-scoped. Different nodes in the same sha can have
-independent canary lists.
+The file lives at the top level of the sha tree, keyed by node path. Different
+nodes in the same sha have independent canary lists.
+
+Canary is intentionally outside `nodes/` because it is deployment-time metadata
+about a specific SHA rollout, not part of the node's identity. See `01_s3_layout.md`.
 
 ## Semantics
 
