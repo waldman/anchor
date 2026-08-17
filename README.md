@@ -106,6 +106,7 @@ Full reference: [`anchor.toml.example`](anchor.toml.example)
 | `aws.profile` | no | — | Named AWS profile |
 | `state.dynamodb_table` | yes | — | DynamoDB table name for fleet state |
 | `state.ttl_days` | no | `15` | Days before stale records are purged |
+| `secrets.prefix` | no | — | Passed to Ansible as `anchor_secret_prefix`. See [Secrets](#secrets). |
 | `log.level` | no | `info` | `debug` / `info` / `warn` / `error` |
 | `log.format` | no | `json` | `json` / `text` |
 
@@ -201,6 +202,52 @@ aws dynamodb create-table \
 ```
 
 Enable TTL on the `ttl` attribute in the AWS console or via CLI.
+
+---
+
+## Secrets
+
+Anchor does not fetch or manage secrets. Instead, it wires Ansible for
+first-class secret retrieval via `amazon.aws.aws_secret` lookups.
+
+Two extra-vars are injected into every `ansible-playbook` invocation:
+
+| Var | Present when | Value |
+|---|---|---|
+| `anchor_node` | always | `[daemon].node` |
+| `anchor_secret_prefix` | `[secrets].prefix` is set | `[secrets].prefix` |
+
+The recommended convention: **one Secrets Manager secret per node**, named
+`<prefix>/<anchor_node>`, valued as a flat JSON object of `UPPER_SNAKE_CASE`
+string keys.
+
+```yaml
+- name: Load anchor secret bundle
+  ansible.builtin.set_fact:
+    _anchor_secrets: "{{ lookup('amazon.aws.aws_secret',
+                          [anchor_secret_prefix, anchor_node] | join('/')) | from_json }}"
+  no_log: true
+
+- name: Render service .env
+  ansible.builtin.copy:
+    content: |
+      {% for k, v in _anchor_secrets.items() %}
+      {{ k }}={{ v }}
+      {% endfor %}
+    dest: /var/lib/myservice/.env
+    owner: myservice
+    group: myservice
+    mode: '0600'
+  no_log: true
+```
+
+The daemon's IAM identity needs `secretsmanager:GetSecretValue` on
+`arn:aws:secretsmanager:<region>:<account>:secret:<prefix>/*`. The
+`amazon.aws` Ansible collection and `boto3` must be present on the target.
+
+See [`specs/08_secrets.md`](specs/08_secrets.md) for the full contract:
+naming, JSON schema discipline, `no_log` requirement, override escape hatch,
+and rotation semantics.
 
 ---
 

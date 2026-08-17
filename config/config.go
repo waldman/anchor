@@ -18,6 +18,7 @@ type Config struct {
 	Ansible AnsibleConfig `toml:"ansible"`
 	AWS     AWSConfig     `toml:"aws"`
 	State   StateConfig   `toml:"state"`
+	Secrets SecretsConfig `toml:"secrets"`
 	Log     LogConfig     `toml:"log"`
 }
 
@@ -47,6 +48,10 @@ type AWSConfig struct {
 type StateConfig struct {
 	DynamoDBTable string `toml:"dynamodb_table"`
 	TTLDays       int    `toml:"ttl_days"`
+}
+
+type SecretsConfig struct {
+	Prefix string `toml:"prefix"`
 }
 
 type LogConfig struct {
