@@ -35,6 +35,11 @@ profile           = ""            # named profile in ~/.aws/credentials
 dynamodb_table = "fleet-state"    # required — DynamoDB table name (see 06_state.md)
 ttl_days       = 15               # optional — default: 15
 
+[secrets]
+# Optional. When set, the daemon injects `anchor_secret_prefix` as an
+# ansible-playbook extra-var. See 08_secrets.md.
+prefix = "anchor"
+
 [log]
 level  = "info"    # optional — debug / info / warn / error. Default: info
 format = "json"    # optional — json / text. Default: json
@@ -80,6 +85,12 @@ format = "json"    # optional — json / text. Default: json
 | `dynamodb_table` | string | yes | — | DynamoDB table name |
 | `ttl_days` | int | no | `15` | Days before a record is auto-purged by DynamoDB |
 
+### `[secrets]`
+
+| Field | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| `prefix` | string | no | `""` | Passed to Ansible as the `anchor_secret_prefix` extra-var. Absent = extra-var not injected. See 08_secrets.md. |
+
 ### `[log]`
 
 | Field | Type | Required | Default | Notes |
@@ -97,3 +108,6 @@ On startup, the daemon validates:
 - `state.dynamodb_table` is non-empty
 
 Fatal error on any missing required field. No silent defaults for required fields.
+
+`[secrets].prefix` is optional and has no validation — an empty value simply
+disables extra-var injection for the prefix.

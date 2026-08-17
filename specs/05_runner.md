@@ -11,11 +11,28 @@ tree, captures output, and returns success or failure.
 ansible-playbook \
   -i inventory \
   -e ansible_connection=local \
+  -e anchor_node=<node> \
+  [-e anchor_secret_prefix=<prefix>] \
   nodes/<node>.yml
 ```
 
 Working directory: `working_dir/current/` (the root of the active sha tree).
 `ansible.cfg` at the tree root is picked up automatically by Ansible.
+
+## Injected Extra-Vars
+
+| Var | Present when | Value |
+|---|---|---|
+| `ansible_connection` | always | `local` |
+| `anchor_node` | always | `[daemon].node` from anchor.toml — the node identity |
+| `anchor_secret_prefix` | `[secrets].prefix` is set | Verbatim from `[secrets].prefix` |
+
+`anchor_node` is exposed to Ansible so playbooks and roles can self-reference
+the machine's node identity (naming, tagging, deriving secret paths). See
+spec 08 for the secrets convention that consumes both variables.
+
+The runner does not introspect or transform these values. Adding new
+extra-vars is a spec change, not a runtime option.
 
 ## Inventory File
 
@@ -71,3 +88,6 @@ The runner inherits the daemon process environment. No additional environment
 variables are injected beyond what the daemon already has. AWS credentials (for
 Ansible lookups against Secrets Manager / Parameter Store) are available via the
 same credential chain the daemon uses.
+
+Secret retrieval itself happens inside Ansible via the `amazon.aws.aws_secret`
+lookup plugin — see spec 08 for the convention.

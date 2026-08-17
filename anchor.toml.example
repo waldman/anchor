@@ -32,6 +32,13 @@ dynamodb_table = "fleet-state"
 # Days before a stale record is auto-purged. Default: 15
 # ttl_days = 15
 
+# [secrets]
+# When set, the daemon injects `anchor_secret_prefix` as an ansible-playbook
+# extra-var. Playbooks then reference secrets via:
+#   lookup('amazon.aws.aws_secret', [anchor_secret_prefix, anchor_node] | join('/'))
+# See specs/08_secrets.md for the full convention.
+# prefix = "anchor"
+
 [log]
 # debug / info / warn / error. Default: info
 # level = "info"

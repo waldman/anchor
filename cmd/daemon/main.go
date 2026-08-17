@@ -45,7 +45,7 @@ func main() {
 
 	s3client := anchors3.New(awscfg, cfg)
 	store := state.NewCompositeStore(awscfg, cfg, cfg.Daemon.WorkingDir)
-	r := runner.New(cfg.Ansible.PlaybookBin)
+	r := runner.New(cfg.Ansible.PlaybookBin, cfg.Secrets.Prefix)
 
 	d, err := daemon.New(cfg, s3client, r, store)
 	if err != nil {
